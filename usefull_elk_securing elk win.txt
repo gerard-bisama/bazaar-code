@@ -1,0 +1,89 @@
+Securing kibana in windows
+---------------------------
+Ref: https://www.elastic.co/blog/getting-started-with-elasticsearch-security
+
+*Step 1: Create two Elasticsearch nodes
+Make two copies of the Elasticsearch directory, one named elasticsearch-master one named elasticsearch-node
+
+*step 2: Configure TLS and authentication
+- The first thing we have to do is generate some certificates that allow the nodes to communicate securely. You can do this with an enterprise CA, 
+but for this demo, we have a command called elasticsearch-certutil that will help us in the generation of X.509 certificates and certificate.
+> cd elasticsearch-master
+> bin\elasticsearch-certutil cert -out config\elastic-certificates.p12 -pass ""
+
+Certificates written to c:\elasticsearch-master\config\elastic-certificates.p12
+This file should be properly secured as it contains the private key for
+your instance.
+
+- Next, open up the file config/elasticsearch.yaml in your favorite text editor. Paste the lines below at the end of the file. 
+"
+xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.keystore.path: elastic-certificates.p12
+xpack.security.transport.ssl.truststore.path: elastic-certificates.p12
+
+You need to set also the cluster name in the elasticsearch.yml file, since it is compulsory to get data nodes in place for the .security index to get created. 
+With the default config of elasticsearch the data node is not created on startup.
+"
+cluster.name: secured-cluster
+"
+- start the master node
+> bin\elasticsearch.bat
+
+We can observe that the certificate exception is not showing up again.
+
+*Step 3: Setup Elasticsearch cluster passwords
+First the master elasticsearch instance most be running. Then open a new console.
+> cd elasticsearch-master
+>bin\elasticsearch-setup-passwords auto #or "interactive" to enter namually your password
+
+Changed password for user apm_system
+PASSWORD apm_system = 0prrgVTVA3UswlQWDN0U
+Changed password for user kibana
+PASSWORD kibana = nIJRIo2hWtRRbiSPV8bB
+Changed password for user logstash_system
+PASSWORD logstash_system = fiGDPsbGUA2EPEX2Egab
+Changed password for user beats_system
+PASSWORD beats_system = 3U6FZMisxNmvw2jlhrZQ
+Changed password for user remote_monitoring_user
+PASSWORD remote_monitoring_user = rNrC31nsUvbQSq2I9ZJ7
+Changed password for user elastic
+PASSWORD elastic = TuTVGF5GDvWvzUCSbetq
+
+*step4: Setup a TLS on Elasticsearch node
+!! this is used to join a new node to the existing one.
+
+*step5: Setup Security in Kibana
+We’ll need to add the password for the Kibana user. We can grab that from the previous output of the setup-passwords command.
+In the config/kibana.yml file, edit the following line to "user" to "kibana" and then change "pass" to whatever the setup-passwords command tells us the Kibana password is
+"
+elasticsearch.username: "kibana"
+elasticsearch.password: "nIJRIo2hWtRRbiSPV8bB"
+"
+Then run kibana
+>bin\kibana.bat
+
+*step5: Configure role-based access control (RBAC) within Kibana
+Once Kibana is running we can switch over to our web browser and open http://localhost:5601. It’s going to ask us for a login, 
+we’ll use the elastic superuser with the password from setup-passwords. !!! Not the kibana user and password, if we log with this one, it will give access limited page
+#########################
+user: elastic
+password: TuTVGF5GDvWvzUCSbetq 
+#########################
+For the first time Kibana ast us if we want to load sample data. let us load "sample fligt data"
+
+- Now let’s create our roles. Find and click on the roles option. 
+Go to Management(gear)> Security section > Roles > Create role. 
+Then enter 
+- the Role name
+- Set the index privileges: by defining the indices (Table to read) and the privileges (operation authorized to perform).
+
+Then create a user
+- Enter username and password. email and fullname is not compulsory.
+- In the roles field: assign the created role +"Kibana_user". We need to assign the kibana_user role as this user will be viewing data in Kibana.
+"kibana_dashboard_only_user": Roles that belong to View Dashboards Only mode
+
+-Now logout as elastic and login with the user account created. The user can see any dashboard name in the list but when displaying the data they can see anything.
+
+
