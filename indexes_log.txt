@@ -1,0 +1,9 @@
+----------------------------------#Index patterns---------------------------
+all_participants_index: b33436b0-bd23-11ea-aaf1-e751741dda36
+all_trainners_index: fb90b050-bd23-11ea-aaf1-e751741dda36
+gangni_participant_index:66e7efd0-bd24-11ea-aaf1-e751741dda36
+gangni_trainers_index:8d7e7a10-bd24-11ea-aaf1-e751741dda36
+niport_particicipants_index: bc94eb90-bd24-11ea-aaf1-e751741dda36
+niport_trainers_index: dd548e80-bd24-11ea-aaf1-e751741dda36
+jamalgonj_participants_indeex: 03beffb0-bd25-11ea-aaf1-e751741dda36
+jamalgonj_trainers_index: 3b321900-bd25-11ea-aaf1-e751741dda36
